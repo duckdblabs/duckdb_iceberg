@@ -16,6 +16,10 @@ struct IcebergSnaphotsBindData : public TableFunctionData {
 	string table_version;
 	string version_name_format;
 	bool skip_schema_inference = false;
+	string catalog_type;
+	string catalog_uri;
+	string catalog_table;
+	string catalog_namespace;
 };
 
 struct IcebergSnapshotGlobalTableFunctionState : public GlobalTableFunctionState {
@@ -33,7 +37,8 @@ public:
 		FileSystem &fs = FileSystem::GetFileSystem(context);
 
 		auto iceberg_meta_path = IcebergSnapshot::GetMetaDataPath(
-		    context, bind_data.filename, fs, bind_data.metadata_compression_codec, bind_data.table_version, bind_data.version_name_format);
+		    context, bind_data.filename, fs, bind_data.metadata_compression_codec, bind_data.catalog_type, bind_data.catalog_uri, bind_data.catalog_table, bind_data.catalog_namespace,
+		    bind_data.table_version, bind_data.version_name_format);
 		global_state->metadata_file = IcebergSnapshot::ReadMetaData(iceberg_meta_path, fs,  bind_data.metadata_compression_codec);
 		global_state->metadata_doc =
 		    yyjson_read(global_state->metadata_file.c_str(), global_state->metadata_file.size(), 0);
