@@ -16,6 +16,15 @@
 namespace duckdb {
 
 static void LoadInternal(DatabaseInstance &instance) {
+	auto &config = DBConfig::GetConfig(instance);
+
+	config.AddExtensionOption(
+		"unsafe_enable_version_guessing",
+		"Enable globbing the filesystem (if possible) to find the latest version metadata. This could result in reading an uncommitted version.",
+		LogicalType::BOOLEAN,
+		Value::BOOLEAN(false)
+	);
+
 	// Iceberg Table Functions
 	for (auto &fun : IcebergFunctions::GetTableFunctions()) {
 		ExtensionUtil::RegisterFunction(instance, fun);
@@ -28,14 +37,6 @@ static void LoadInternal(DatabaseInstance &instance) {
 }
 
 void IcebergExtension::Load(DuckDB &db) {
-	auto &config = DBConfig::GetConfig(*db.instance);
-
-	config.AddExtensionOption(
-		"unsafe_enable_version_guessing",
-		"Enable globbing the filesystem (if possible) to find the latest version metadata. This could result in reading an uncommitted version.",
-		LogicalType::BOOLEAN,
-		Value::BOOLEAN(false)
-	);
 	LoadInternal(*db.instance);
 }
 std::string IcebergExtension::Name() {
