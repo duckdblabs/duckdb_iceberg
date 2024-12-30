@@ -8,8 +8,8 @@
 #include "avro/DataFile.hh"
 #include "avro/Decoder.hh"
 #include "avro/Encoder.hh"
-#include "avro/ValidSchema.hh"
 #include "avro/Stream.hh"
+#include "avro/ValidSchema.hh"
 
 namespace duckdb {
 
@@ -188,38 +188,54 @@ string GenerateMetaDataUrl(FileSystem &fs, const string &meta_path, string &tabl
 		"Iceberg metadata file not found for table version '%s' using '%s' compression and format(s): '%s'", table_version, metadata_compression_codec, version_format);
 }
 
-string GetMetadataPathFromRestCatalog(const string &catalog_uri, const string &table_name, const string &namespace_name, const string &table_version) {
-	// We've been given a REST catalog URI
-	// - GET /v1/namespaces/{namespace}/tables/{table}
+string GetMetadataPathFromRestCatalog(const string & table_name, const IcebergCatalogDefinition &catalog_definition) {
+	if (catalog_definition.catalog_uri.empty() || catalog_definition.catalog_namespace.empty()) {
+		throw IOException("Catalog URI and namespace must be set for REST catalog");
+	}
 
-	duckdb_httplib::Client cli(catalog_uri);
+	duckdb_httplib::Client cli(catalog_definition.catalog_uri);
 
-	const auto url = "/v1/namespaces/" + namespace_name + "/tables/" + table_name;
+	const string url_path = StringUtil::Format("%s/v1/namespaces/%s/tables/%s", catalog_definition.catalog_prefix, catalog_definition.catalog_namespace, table_name);
 
-	if (auto res = cli.Get(url)) {
-		if (res->status == duckdb_httplib::StatusCode::OK_200) {
-			auto *doc = yyjson_read(res->body.c_str(), res->body.size(), 0);
-			auto *root = yyjson_doc_get_root(doc);
-			const auto val = yyjson_obj_get(root, "metadata-location");
+	auto res = cli.Get(url_path);
+	if (!res) {
+		throw IOException("Connection error to host '%s' with error: %s", catalog_definition.catalog_uri + url_path, to_string(res.error()));
+	}
+	if (res->status != duckdb_httplib::StatusCode::OK_200) {
+		throw IOException("Getting table metadata from URL '%s' returned status: %s", catalog_definition.catalog_uri + url_path, to_string(res->status));
+	}
 
-			return yyjson_get_str(val);
+	yyjson_doc* doc = nullptr;
+	try {
+		doc = yyjson_read(res->body.c_str(), res->body.size(), 0);
+		if (!doc) {
+			throw IOException("Failed to parse table metadata.");
 		}
-		throw IOException("Getting table metadata from URL '%s' returned status: %s",cli.host() + url, to_string(res -> status));
-	} else {
-		throw IOException("Connection error to host '%s' with error: %s", cli.host() + url, to_string(res.error()));
+		auto *root = yyjson_doc_get_root(doc);
+		if (!root) {
+			throw IOException("Failed to get root from table metadata");
+		}
+
+		// Get the metadata path from the JSON response
+		auto result = IcebergUtils::TryGetStrFromObject(root, "metadata-location");
+		yyjson_doc_free(doc);
+		return result;
+	} catch (...) {
+		yyjson_doc_free(doc);
+		throw;
 	}
 }
 
-string IcebergSnapshot::GetMetaDataPath(ClientContext &context, const string &path, FileSystem &fs, string metadata_compression_codec, const string& catalog_type = "", const string& catalog_uri = "", const string& catalog_table = "", const string& catalog_namespace = "", string table_version = DEFAULT_TABLE_VERSION, string version_format = DEFAULT_TABLE_VERSION_FORMAT) {
+string IcebergSnapshot::GetMetaDataPath(ClientContext &context, const string &path, FileSystem &fs, string metadata_compression_codec,
+                                        const IcebergCatalogDefinition &catalog_definition, string table_version = DEFAULT_TABLE_VERSION, string version_format = DEFAULT_TABLE_VERSION_FORMAT) {
 	string version_hint;
 	string meta_path = fs.JoinPath(path, "metadata");
 	if (StringUtil::EndsWith(path, ".json")) {
 		// We've been given a real metadata path. Nothing else to do.
 		return path;
-	} else if (catalog_type == "REST" && !catalog_uri.empty() && !catalog_table.empty() && !catalog_namespace.empty()) {
-		return GetMetadataPathFromRestCatalog(catalog_uri, catalog_table, catalog_namespace, table_version);
-	}
-	else if (!fs.DirectoryExists(meta_path)) {
+	} else if (catalog_definition.catalog_type == "rest") {
+		return GetMetadataPathFromRestCatalog(path, catalog_definition);
+	} else if (!fs.DirectoryExists(meta_path)) {
 		// Make sure we have a metadata directory to look in
 		throw IOException("Cannot open \"%s\": Metadata directory does not exist", path);
 	} else if(StringUtil::EndsWith(table_version, ".text")||StringUtil::EndsWith(table_version, ".txt")) {
