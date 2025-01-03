@@ -190,7 +190,7 @@ string GenerateMetaDataUrl(FileSystem &fs, const string &meta_path, string &tabl
 
 string GetMetadataPathFromRestCatalog(const string &table_name, const IcebergCatalogDefinition &catalog_definition) {
 	if (catalog_definition.catalog_uri.empty() || catalog_definition.catalog_namespace.empty()) {
-		throw IOException("Catalog URI and namespace must be set for REST catalog");
+		throw InvalidInputException("Catalog URI and namespace must be set for REST catalog");
 	}
 
 	duckdb_httplib::Client cli(catalog_definition.catalog_uri);
@@ -200,11 +200,11 @@ string GetMetadataPathFromRestCatalog(const string &table_name, const IcebergCat
 
 	auto res = cli.Get(url_path);
 	if (!res) {
-		throw IOException("Connection error to host '%s' with error: %s",
+		throw ConnectionException("Connection error to host '%s' with error: %s",
 			catalog_definition.catalog_uri + url_path, to_string(res.error()));
 	}
 	if (res->status != duckdb_httplib::StatusCode::OK_200) {
-		throw IOException("Getting table metadata from URL '%s' returned status: %s",
+		throw ConnectionException("Getting table metadata from URL '%s' returned status: %s",
 			catalog_definition.catalog_uri + url_path, to_string(res->status));
 	}
 
