@@ -63,3 +63,8 @@ jobs:
         working-directory: scripts/
         run: |
           ./start-rest-catalog.sh
+
+      - name: Test Rest Catalog Integration
+        shell: bash
+        run: |
+          REST_ENDPOINT_AVAILABLE=1 make test
