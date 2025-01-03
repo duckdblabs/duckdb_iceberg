@@ -1,4 +1,4 @@
-name: Test Rest Catalog
+name: Test against REST Catalog
 on:
   push:
   pull_request:
