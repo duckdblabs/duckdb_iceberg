@@ -43,7 +43,7 @@ struct IcebergCatalogDefinition {
 	const string& catalog_uri;
 
 	//! The REST endpoint prefix (e.g. '/iceberg' for Apache Gravitino)
-	const string& catalog_prefix = "";
+	const string& catalog_prefix;
 
 	//! The namespace of the table
 	const string& catalog_namespace;

@@ -20,7 +20,6 @@ set(EXTENSION_SOURCES
     src/iceberg_functions/iceberg_scan.cpp
     src/iceberg_functions/iceberg_metadata.cpp)
 
-
 add_library(${EXTENSION_NAME} STATIC ${EXTENSION_SOURCES})
 
 set(PARAMETERS "-warnings")

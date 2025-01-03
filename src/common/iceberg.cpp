@@ -8,8 +8,8 @@
 #include "avro/DataFile.hh"
 #include "avro/Decoder.hh"
 #include "avro/Encoder.hh"
-#include "avro/Stream.hh"
 #include "avro/ValidSchema.hh"
+#include "avro/Stream.hh"
 
 namespace duckdb {
 
