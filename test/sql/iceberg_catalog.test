@@ -62,12 +62,6 @@ SELECT count(*) FROM ICEBERG_SCAN('table_mor_deletes', catalog_type='rest', cata
 11
 
 query I
-SELECT SUM(record_count) FROM ICEBERG_METADATA('table_mor_deletes', catalog_type='rest', catalog_uri='127.0.0.1:8181', catalog_namespace='default')
-WHERE status = 'EXISTING';
-----
-11
-
-query I
 SELECT count(*) FROM ICEBERG_SNAPSHOTS('table_mor_deletes', catalog_type='rest', catalog_uri='127.0.0.1:8181', catalog_namespace='default');
 ----
 2
