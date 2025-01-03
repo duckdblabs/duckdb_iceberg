@@ -188,21 +188,24 @@ string GenerateMetaDataUrl(FileSystem &fs, const string &meta_path, string &tabl
 		"Iceberg metadata file not found for table version '%s' using '%s' compression and format(s): '%s'", table_version, metadata_compression_codec, version_format);
 }
 
-string GetMetadataPathFromRestCatalog(const string & table_name, const IcebergCatalogDefinition &catalog_definition) {
+string GetMetadataPathFromRestCatalog(const string &table_name, const IcebergCatalogDefinition &catalog_definition) {
 	if (catalog_definition.catalog_uri.empty() || catalog_definition.catalog_namespace.empty()) {
 		throw IOException("Catalog URI and namespace must be set for REST catalog");
 	}
 
 	duckdb_httplib::Client cli(catalog_definition.catalog_uri);
 
-	const string url_path = StringUtil::Format("%s/v1/namespaces/%s/tables/%s", catalog_definition.catalog_prefix, catalog_definition.catalog_namespace, table_name);
+	const string url_path = StringUtil::Format("%s/v1/namespaces/%s/tables/%s",
+		catalog_definition.catalog_prefix, catalog_definition.catalog_namespace, table_name);
 
 	auto res = cli.Get(url_path);
 	if (!res) {
-		throw IOException("Connection error to host '%s' with error: %s", catalog_definition.catalog_uri + url_path, to_string(res.error()));
+		throw IOException("Connection error to host '%s' with error: %s",
+			catalog_definition.catalog_uri + url_path, to_string(res.error()));
 	}
 	if (res->status != duckdb_httplib::StatusCode::OK_200) {
-		throw IOException("Getting table metadata from URL '%s' returned status: %s", catalog_definition.catalog_uri + url_path, to_string(res->status));
+		throw IOException("Getting table metadata from URL '%s' returned status: %s",
+			catalog_definition.catalog_uri + url_path, to_string(res->status));
 	}
 
 	yyjson_doc* doc = nullptr;
@@ -216,7 +219,7 @@ string GetMetadataPathFromRestCatalog(const string & table_name, const IcebergCa
 			throw IOException("Failed to get root from table metadata");
 		}
 
-		// Get the metadata path from the JSON response
+		// Get the metadata path from the JSON response, method will throw if not found
 		auto result = IcebergUtils::TryGetStrFromObject(root, "metadata-location");
 		yyjson_doc_free(doc);
 		return result;
@@ -226,8 +229,10 @@ string GetMetadataPathFromRestCatalog(const string & table_name, const IcebergCa
 	}
 }
 
-string IcebergSnapshot::GetMetaDataPath(ClientContext &context, const string &path, FileSystem &fs, string metadata_compression_codec,
-                                        const IcebergCatalogDefinition &catalog_definition, string table_version = DEFAULT_TABLE_VERSION, string version_format = DEFAULT_TABLE_VERSION_FORMAT) {
+string IcebergSnapshot::GetMetaDataPath(ClientContext &context, const string &path, FileSystem &fs,
+	string metadata_compression_codec, const IcebergCatalogDefinition &catalog_definition,
+		string table_version = DEFAULT_TABLE_VERSION, string version_format = DEFAULT_TABLE_VERSION_FORMAT) {
+
 	string version_hint;
 	string meta_path = fs.JoinPath(path, "metadata");
 	if (StringUtil::EndsWith(path, ".json")) {
