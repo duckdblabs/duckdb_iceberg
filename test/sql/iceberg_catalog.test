@@ -70,3 +70,20 @@ query I
 SELECT count(*) FROM ICEBERG_SNAPSHOTS('table_mor_deletes', catalog_type='rest', catalog_uri='127.0.0.1:8181', catalog_namespace='default');
 ----
 2
+
+statement error
+SELECT count(*) FROM ICEBERG_SNAPSHOTS('non_existing_table', catalog_type='rest', catalog_uri='127.0.0.1:8181', catalog_namespace='default');
+----
+IO Error: Getting table metadata from URL '127.0.0.1:8181/v1/namespaces/default/tables/non_existing_table' returned status: 404
+
+statement error
+SELECT count(*) FROM ICEBERG_SNAPSHOTS('table_unpartitioned', catalog_type='rest', catalog_uri='127.0.0.1:8182', catalog_namespace='default');
+----
+IO Error: Connection error to host '127.0.0.1:8182/v1/namespaces/default/tables/table_unpartitioned' with error: Could not establish connection
+
+statement error
+SELECT count(*) FROM ICEBERG_SNAPSHOTS('table_unpartitioned', catalog_type='rest', catalog_uri='127.0.0.1:8182', catalog_namespace='default', catalog_prefix='/test');
+----
+IO Error: Connection error to host '127.0.0.1:8182/test/v1/namespaces/default/tables/table_unpartitioned' with error: Could not establish connection
+
+
