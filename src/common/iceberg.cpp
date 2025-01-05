@@ -190,7 +190,7 @@ string GenerateMetaDataUrl(FileSystem &fs, const string &meta_path, string &tabl
 
 string GetMetadataPathFromRestCatalog(const string &table_name, const IcebergCatalogDefinition &catalog_definition) {
 	if (catalog_definition.catalog_uri.empty() || catalog_definition.catalog_namespace.empty()) {
-		throw InvalidInputException("Catalog URI and namespace must be set for REST catalog");
+		throw InvalidInputException("Catalog URI and namespace must be set for REST catalog.");
 	}
 
 	duckdb_httplib::Client cli(catalog_definition.catalog_uri);
@@ -216,7 +216,7 @@ string GetMetadataPathFromRestCatalog(const string &table_name, const IcebergCat
 		}
 		auto *root = yyjson_doc_get_root(doc);
 		if (!root) {
-			throw IOException("Failed to get root from table metadata");
+			throw IOException("Failed to get root from table metadata.");
 		}
 
 		// Get the metadata path from the JSON response, method will throw if not found

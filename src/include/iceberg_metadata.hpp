@@ -37,16 +37,16 @@ static string DEFAULT_TABLE_VERSION = UNKNOWN_TABLE_VERSION;
 
 struct IcebergCatalogDefinition {
 	//! The type of catalog (e.g. "rest")
-	const string& catalog_type;
+	const string catalog_type;
 
 	//! The URI of the catalog
-	const string& catalog_uri;
+	const string catalog_uri;
 
 	//! The REST endpoint prefix (e.g. '/iceberg' for Apache Gravitino)
-	const string& catalog_prefix;
+	const string catalog_prefix;
 
 	//! The namespace of the table
-	const string& catalog_namespace;
+	const string catalog_namespace;
 };
 
 struct IcebergColumnDefinition {
