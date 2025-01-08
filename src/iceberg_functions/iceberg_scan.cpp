@@ -205,7 +205,7 @@ static unique_ptr<TableRef> MakeScanExpression(vector<Value> &data_file_values, 
 	auto select_node = make_uniq<SelectNode>();
 	select_node->from_table = std::move(join_node);
 	auto select_expr = make_uniq<StarExpression>();
-	select_expr->exclude_list = {"filename", "file_row_number"};
+	select_expr->exclude_list = {QualifiedColumnName("filename"), QualifiedColumnName("file_row_number")};
 	vector<unique_ptr<ParsedExpression>> select_exprs;
 	select_exprs.push_back(std::move(select_expr));
 	select_node->select_list = std::move(select_exprs);
