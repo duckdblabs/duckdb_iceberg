@@ -13,12 +13,24 @@ include_directories(src/include)
 set(EXTENSION_SOURCES
     src/iceberg_extension.cpp
     src/iceberg_functions.cpp
+    src/catalog_api.cpp
+    src/catalog_utils.cpp 
     src/common/utils.cpp
     src/common/schema.cpp
     src/common/iceberg.cpp
     src/iceberg_functions/iceberg_snapshots.cpp
     src/iceberg_functions/iceberg_scan.cpp
-    src/iceberg_functions/iceberg_metadata.cpp)
+    src/iceberg_functions/iceberg_metadata.cpp
+    src/storage/ic_catalog.cpp
+    src/storage/ic_catalog_set.cpp
+    src/storage/ic_clear_cache.cpp
+    src/storage/ic_schema_entry.cpp
+    src/storage/ic_schema_set.cpp
+    src/storage/ic_table_entry.cpp
+    src/storage/ic_table_set.cpp
+    src/storage/ic_transaction.cpp
+    src/storage/ic_transaction_manager.cpp
+    )
 
 add_library(${EXTENSION_NAME} STATIC ${EXTENSION_SOURCES})
 
@@ -73,10 +85,12 @@ target_link_libraries(
             Snappy::snappy
             ZLIB::ZLIB)
 
+find_package(CURL REQUIRED)
+
 # Link dependencies into extension
-target_link_libraries(${EXTENSION_NAME} PUBLIC optimized avro_static_release
+target_link_libraries(${EXTENSION_NAME} PUBLIC optimized avro_static_release CURL::libcurl
                                                debug avro_static_debug)
-target_link_libraries(${TARGET_NAME}_loadable_extension optimized
+target_link_libraries(${TARGET_NAME}_loadable_extension optimized CURL::libcurl
                       avro_static_release debug avro_static_debug)
 
 install(

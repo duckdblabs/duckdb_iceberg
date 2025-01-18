@@ -4,6 +4,7 @@
       "name": "avro-cpp",
       "features": ["snappy"]
     },
+    "curl",
     "openssl"
   ],
   "vcpkg-configuration": {
